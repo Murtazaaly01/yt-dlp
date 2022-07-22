@@ -54,7 +54,9 @@ class DashSegmentsFD(FragmentFD):
 
         if real_downloader:
             self.to_screen(
-                '[%s] Fragment downloads will be delegated to %s' % (self.FD_NAME, real_downloader.get_basename()))
+                f'[{self.FD_NAME}] Fragment downloads will be delegated to {real_downloader.get_basename()}'
+            )
+
             info_dict['fragments'] = fragments_to_download
             fd = real_downloader(self.ydl, self.params)
             return fd.real_download(filename, info_dict)

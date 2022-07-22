@@ -21,7 +21,7 @@ class YoutubeLiveChatFD(FragmentFD):
 
     def real_download(self, filename, info_dict):
         video_id = info_dict['video_id']
-        self.to_screen('[%s] Downloading live chat' % self.FD_NAME)
+        self.to_screen(f'[{self.FD_NAME}] Downloading live chat')
 
         fragment_retries = self.params.get('fragment_retries', 0)
         test = self.params.get('test', False)
@@ -137,7 +137,7 @@ class YoutubeLiveChatFD(FragmentFD):
                     if count <= fragment_retries:
                         self.report_retry_fragment(err, frag_index, count, fragment_retries)
             if count > fragment_retries:
-                self.report_error('giving up after %s fragment retries' % fragment_retries)
+                self.report_error(f'giving up after {fragment_retries} fragment retries')
                 return False, None, None, None
 
         self._prepare_and_start_frag_download(ctx, info_dict)
@@ -165,11 +165,17 @@ class YoutubeLiveChatFD(FragmentFD):
             return False
         visitor_data = try_get(innertube_context, lambda x: x['client']['visitorData'], str)
         if info_dict['protocol'] == 'youtube_live_chat_replay':
-            url = 'https://www.youtube.com/youtubei/v1/live_chat/get_live_chat_replay?key=' + api_key
-            chat_page_url = 'https://www.youtube.com/live_chat_replay?continuation=' + continuation_id
+            url = f'https://www.youtube.com/youtubei/v1/live_chat/get_live_chat_replay?key={api_key}'
+
+            chat_page_url = f'https://www.youtube.com/live_chat_replay?continuation={continuation_id}'
+
         elif info_dict['protocol'] == 'youtube_live_chat':
-            url = 'https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=' + api_key
-            chat_page_url = 'https://www.youtube.com/live_chat?continuation=' + continuation_id
+            url = f'https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key={api_key}'
+
+            chat_page_url = (
+                f'https://www.youtube.com/live_chat?continuation={continuation_id}'
+            )
+
 
         frag_index = offset = 0
         click_tracking_params = None
@@ -225,8 +231,7 @@ class YoutubeLiveChatFD(FragmentFD):
             lambda x: x['showItemEndpoint']['showLiveChatItemEndpoint']['renderer'],
             lambda x: x['contents'],
         ]
-        parent_item = try_get(renderer, parent_item_getters, dict)
-        if parent_item:
+        if parent_item := try_get(renderer, parent_item_getters, dict):
             renderer = dict_get(parent_item, [
                 'liveChatTextMessageRenderer', 'liveChatPaidMessageRenderer',
                 'liveChatMembershipItemRenderer', 'liveChatPaidStickerRenderer',

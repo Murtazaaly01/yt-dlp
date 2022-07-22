@@ -18,7 +18,7 @@ _x86 = '_x86' if arch == '32' else ''
 
 # Compatability with older arguments
 opts = sys.argv[1:]
-if opts[0:1] in (['32'], ['64']):
+if opts[:1] in (['32'], ['64']):
     if arch != opts[0]:
         raise Exception(f'{opts[0]}bit executable cannot be built on a {arch}bit system')
     opts = opts[1:]
@@ -26,7 +26,7 @@ opts = opts or ['--onefile']
 
 print(f'Building {arch}bit version with options {opts}')
 
-FILE_DESCRIPTION = 'yt-dlp%s' % (' (32 Bit)' if _x86 else '')
+FILE_DESCRIPTION = f"yt-dlp{' (32 Bit)' if _x86 else ''}"
 
 exec(compile(open('yt_dlp/version.py').read(), 'yt_dlp/version.py', 'exec'))
 VERSION = locals()['__version__']
@@ -34,7 +34,7 @@ VERSION = locals()['__version__']
 VERSION_LIST = VERSION.split('.')
 VERSION_LIST = list(map(int, VERSION_LIST)) + [0] * (4 - len(VERSION_LIST))
 
-print('Version: %s%s' % (VERSION, _x86))
+print(f'Version: {VERSION}{_x86}')
 print('Remember to update the version using devscipts\\update-version.py')
 
 VERSION_FILE = VSVersionInfo(
@@ -49,26 +49,36 @@ VERSION_FILE = VSVersionInfo(
         date=(0, 0),
     ),
     kids=[
-        StringFileInfo([
-            StringTable(
-                '040904B0', [
-                    StringStruct('Comments', 'yt-dlp%s Command Line Interface.' % _x86),
-                    StringStruct('CompanyName', 'https://github.com/yt-dlp'),
-                    StringStruct('FileDescription', FILE_DESCRIPTION),
-                    StringStruct('FileVersion', VERSION),
-                    StringStruct('InternalName', 'yt-dlp%s' % _x86),
-                    StringStruct(
-                        'LegalCopyright',
-                        'pukkandan.ytdlp@gmail.com | UNLICENSE',
-                    ),
-                    StringStruct('OriginalFilename', 'yt-dlp%s.exe' % _x86),
-                    StringStruct('ProductName', 'yt-dlp%s' % _x86),
-                    StringStruct(
-                        'ProductVersion',
-                        '%s%s on Python %s' % (VERSION, _x86, platform.python_version())),
-                ])]),
-        VarFileInfo([VarStruct('Translation', [0, 1200])])
-    ]
+        StringFileInfo(
+            [
+                StringTable(
+                    '040904B0',
+                    [
+                        StringStruct(
+                            'Comments', f'yt-dlp{_x86} Command Line Interface.'
+                        ),
+                        StringStruct(
+                            'CompanyName', 'https://github.com/yt-dlp'
+                        ),
+                        StringStruct('FileDescription', FILE_DESCRIPTION),
+                        StringStruct('FileVersion', VERSION),
+                        StringStruct('InternalName', f'yt-dlp{_x86}'),
+                        StringStruct(
+                            'LegalCopyright',
+                            'pukkandan.ytdlp@gmail.com | UNLICENSE',
+                        ),
+                        StringStruct('OriginalFilename', f'yt-dlp{_x86}.exe'),
+                        StringStruct('ProductName', f'yt-dlp{_x86}'),
+                        StringStruct(
+                            'ProductVersion',
+                            f'{VERSION}{_x86} on Python {platform.python_version()}',
+                        ),
+                    ],
+                )
+            ]
+        ),
+        VarFileInfo([VarStruct('Translation', [0, 1200])]),
+    ],
 )
 
 
@@ -89,14 +99,20 @@ def pycryptodome_module():
 dependancies = [pycryptodome_module(), 'mutagen'] + collect_submodules('websockets')
 excluded_modules = ['test', 'ytdlp_plugins', 'youtube-dl', 'youtube-dlc']
 
-PyInstaller.__main__.run([
-    '--name=yt-dlp%s' % _x86,
-    '--icon=devscripts/logo.ico',
-    *[f'--exclude-module={module}' for module in excluded_modules],
-    *[f'--hidden-import={module}' for module in dependancies],
-    '--upx-exclude=vcruntime140.dll',
-    '--noconfirm',
-    *opts,
-    'yt_dlp/__main__.py',
-])
-SetVersion('dist/%syt-dlp%s.exe' % ('yt-dlp/' if '--onedir' in opts else '', _x86), VERSION_FILE)
+PyInstaller.__main__.run(
+    [
+        f'--name=yt-dlp{_x86}',
+        '--icon=devscripts/logo.ico',
+        *[f'--exclude-module={module}' for module in excluded_modules],
+        *[f'--hidden-import={module}' for module in dependancies],
+        '--upx-exclude=vcruntime140.dll',
+        '--noconfirm',
+        *opts,
+        'yt_dlp/__main__.py',
+    ]
+)
+
+SetVersion(
+    f"dist/{'yt-dlp/' if '--onedir' in opts else ''}yt-dlp{_x86}.exe",
+    VERSION_FILE,
+)

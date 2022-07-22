@@ -59,10 +59,7 @@ else:
 
 
 def compat_ord(c):
-    if type(c) is int:
-        return c
-    else:
-        return ord(c)
+    return c if type(c) is int else ord(c)
 
 
 def compat_setenv(key, value, env=os.environ):
@@ -100,9 +97,9 @@ def workaround_optparse_bug9161():
                 v.encode('ascii', 'replace') if isinstance(v, compat_str)
                 else v)
             bargs = [enc(a) for a in args]
-            bkwargs = dict(
-                (k, enc(v)) for k, v in kwargs.items())
+            bkwargs = {k: enc(v) for k, v in kwargs.items()}
             return real_add_option(self, *bargs, **bkwargs)
+
         optparse.OptionGroup.add_option = _compat_add_option
 
 

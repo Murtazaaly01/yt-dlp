@@ -63,7 +63,7 @@ class HlsFD(FragmentFD):
 
     def real_download(self, filename, info_dict):
         man_url = info_dict['url']
-        self.to_screen('[%s] Downloading m3u8 manifest' % self.FD_NAME)
+        self.to_screen(f'[{self.FD_NAME}] Downloading m3u8 manifest')
 
         urlh = self.ydl.urlopen(self._prepare_url(info_dict, man_url))
         man_url = urlh.geturl()
@@ -94,7 +94,9 @@ class HlsFD(FragmentFD):
             real_downloader = None
         if real_downloader:
             self.to_screen(
-                '[%s] Fragment downloads will be delegated to %s' % (self.FD_NAME, real_downloader.get_basename()))
+                f'[{self.FD_NAME}] Fragment downloads will be delegated to {real_downloader.get_basename()}'
+            )
+
 
         def is_ad_fragment_start(s):
             return (s.startswith('#ANVATO-SEGMENT-INFO') and 'type=ad' in s

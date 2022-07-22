@@ -35,9 +35,7 @@ class _MatchParser(object):
         if isinstance(r, compat_Pattern):
             return r.match(self._data, self._pos)
         if isinstance(r, str):
-            if self._data.startswith(r, self._pos):
-                return len(r)
-            return None
+            return len(r) if self._data.startswith(r, self._pos) else None
         raise ValueError(r)
 
     def advance(self, by):
@@ -183,22 +181,19 @@ class Magic(HeaderBlock):
         parser = parser.child()
 
         while True:
-            m = parser.consume(cls._REGEX_TSMAP_LOCAL)
-            if m:
+            if m := parser.consume(cls._REGEX_TSMAP_LOCAL):
                 m = parser.consume(_REGEX_TS)
                 if m is None:
                     raise ParseError(parser)
                 local = _parse_ts(m)
                 if local is None:
                     raise ParseError(parser)
-            else:
-                m = parser.consume(cls._REGEX_TSMAP_MPEGTS)
-                if m:
-                    mpegts = int_or_none(m.group(1))
-                    if mpegts is None:
-                        raise ParseError(parser)
-                else:
+            elif m := parser.consume(cls._REGEX_TSMAP_MPEGTS):
+                mpegts = int_or_none(m.group(1))
+                if mpegts is None:
                     raise ParseError(parser)
+            else:
+                raise ParseError(parser)
             if parser.consume(cls._REGEX_TSMAP_SEP):
                 continue
             if parser.consume(_REGEX_NL):
@@ -277,11 +272,7 @@ class CueBlock(Block):
     def parse(cls, parser):
         parser = parser.child()
 
-        id = None
-        m = parser.consume(cls._REGEX_ID)
-        if m:
-            id = m.group(1)
-
+        id = m.group(1) if (m := parser.consume(cls._REGEX_ID)) else None
         m0 = parser.consume(_REGEX_TS)
         if not m0:
             return None
@@ -300,11 +291,11 @@ class CueBlock(Block):
 
         text = io.StringIO()
         while True:
-            m = parser.consume(cls._REGEX_PAYLOAD)
-            if not m:
-                break
-            text.write(m.group(0))
+            if m := parser.consume(cls._REGEX_PAYLOAD):
+                text.write(m.group(0))
 
+            else:
+                break
         parser.commit()
         return cls(
             id=id,
@@ -371,16 +362,13 @@ def parse_fragment(frag_content):
         if parser.consume(_REGEX_BLANK):
             continue
 
-        block = RegionBlock.parse(parser)
-        if block:
+        if block := RegionBlock.parse(parser):
             yield block
             continue
-        block = StyleBlock.parse(parser)
-        if block:
+        if block := StyleBlock.parse(parser):
             yield block
             continue
-        block = CommentBlock.parse(parser)
-        if block:
+        if block := CommentBlock.parse(parser):
             yield block  # XXX: or skip
             continue
 
@@ -390,12 +378,10 @@ def parse_fragment(frag_content):
         if parser.consume(_REGEX_BLANK):
             continue
 
-        block = CommentBlock.parse(parser)
-        if block:
+        if block := CommentBlock.parse(parser):
             yield block  # XXX: or skip
             continue
-        block = CueBlock.parse(parser)
-        if block:
+        if block := CueBlock.parse(parser):
             yield block
             continue
 

@@ -256,7 +256,7 @@ class IsmFD(FragmentFD):
         skip_unavailable_fragments = self.params.get('skip_unavailable_fragments', True)
 
         frag_index = 0
-        for i, segment in enumerate(segments):
+        for segment in segments:
             frag_index += 1
             if frag_index <= ctx['fragment_index']:
                 continue
@@ -281,7 +281,7 @@ class IsmFD(FragmentFD):
                 if skip_unavailable_fragments:
                     self.report_skip_fragment(frag_index)
                     continue
-                self.report_error('giving up after %s fragment retries' % fragment_retries)
+                self.report_error(f'giving up after {fragment_retries} fragment retries')
                 return False
 
         self._finish_frag_download(ctx, info_dict)

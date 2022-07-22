@@ -100,10 +100,10 @@ class TestSignature(unittest.TestCase):
 def make_tfunc(url, sig_input, expected_sig):
     m = re.match(r'.*-([a-zA-Z0-9_-]+)(?:/watch_as3|/html5player)?\.[a-z]+$', url)
     assert m, '%r should follow URL format' % url
-    test_id = m.group(1)
+    test_id = m[1]
 
     def test_func(self):
-        basename = 'player-%s.js' % test_id
+        basename = f'player-{test_id}.js'
         fn = os.path.join(self.TESTDATA_DIR, basename)
 
         if not os.path.exists(fn):
@@ -120,7 +120,7 @@ def make_tfunc(url, sig_input, expected_sig):
         got_sig = func(src_sig)
         self.assertEqual(got_sig, expected_sig)
 
-    test_func.__name__ = str('test_signature_js_' + test_id)
+    test_func.__name__ = str(f'test_signature_js_{test_id}')
     setattr(TestSignature, test_func.__name__, test_func)
 
 

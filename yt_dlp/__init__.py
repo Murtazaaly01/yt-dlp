@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-f'You are using an unsupported version of Python. Only Python versions 3.6 and above are supported by yt-dlp'  # noqa: F541
+'You are using an unsupported version of Python. Only Python versions 3.6 and above are supported by yt-dlp'
+
 
 __license__ = 'Public Domain'
 

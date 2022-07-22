@@ -34,9 +34,7 @@ def rsa_verify(message, signature, key):
 def detect_variant():
     if hasattr(sys, 'frozen'):
         if getattr(sys, '_MEIPASS', None):
-            if sys._MEIPASS == os.path.dirname(sys.executable):
-                return 'dir'
-            return 'exe'
+            return 'dir' if sys._MEIPASS == os.path.dirname(sys.executable) else 'exe'
         return 'py2exe'
     elif isinstance(globals().get('__loader__'), zipimporter):
         return 'zip'
@@ -122,11 +120,19 @@ def run_update(ydl):
     }
 
     def get_bin_info(bin_or_exe, version):
-        label = version_labels['%s_%s' % (bin_or_exe, version)]
-        return next((i for i in version_info['assets'] if i['name'] == 'yt-dlp%s' % label), {})
+        label = version_labels[f'{bin_or_exe}_{version}']
+        return next(
+            (
+                i
+                for i in version_info['assets']
+                if i['name'] == f'yt-dlp{label}'
+            ),
+            {},
+        )
+
 
     def get_sha256sum(bin_or_exe, version):
-        filename = 'yt-dlp%s' % version_labels['%s_%s' % (bin_or_exe, version)]
+        filename = f"yt-dlp{version_labels[f'{bin_or_exe}_{version}']}"
         urlh = next(
             (i for i in version_info['assets'] if i['name'] in ('SHA2-256SUMS')),
             {}).get('browser_download_url')
@@ -145,8 +151,8 @@ def run_update(ydl):
         if not os.access(directory, os.W_OK):
             return report_permission_error(directory)
         try:
-            if os.path.exists(filename + '.old'):
-                os.remove(filename + '.old')
+            if os.path.exists(f'{filename}.old'):
+                os.remove(f'{filename}.old')
         except (IOError, OSError):
             return report_unable('remove the old version')
 
@@ -161,10 +167,10 @@ def run_update(ydl):
         except (IOError, OSError):
             return report_network_error('download latest version')
 
-        if not os.access(exe + '.new', os.W_OK):
+        if not os.access(f'{exe}.new', os.W_OK):
             return report_permission_error(f'{exe}.new')
         try:
-            with open(exe + '.new', 'wb') as outf:
+            with open(f'{exe}.new', 'wb') as outf:
                 outf.write(newcontent)
         except (IOError, OSError):
             return report_unable('write the new version')
@@ -172,34 +178,33 @@ def run_update(ydl):
         expected_sum = get_sha256sum('exe', arch)
         if not expected_sum:
             ydl.report_warning('no hash information found for the release')
-        elif calc_sha256sum(exe + '.new') != expected_sum:
+        elif calc_sha256sum(f'{exe}.new') != expected_sum:
             report_network_error('verify the new executable')
             try:
-                os.remove(exe + '.new')
+                os.remove(f'{exe}.new')
             except OSError:
                 return report_unable('remove corrupt download')
 
         try:
-            os.rename(exe, exe + '.old')
+            os.rename(exe, f'{exe}.old')
         except (IOError, OSError):
             return report_unable('move current version')
         try:
-            os.rename(exe + '.new', exe)
+            os.rename(f'{exe}.new', exe)
         except (IOError, OSError):
             report_unable('overwrite current version')
-            os.rename(exe + '.old', exe)
+            os.rename(f'{exe}.old', exe)
             return
         try:
             # Continues to run in the background
             subprocess.Popen(
                 'ping 127.0.0.1 -n 5 -w 1000 & del /F "%s.old"' % exe,
                 shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            ydl.to_screen('Updated yt-dlp to version %s' % version_id)
+            ydl.to_screen(f'Updated yt-dlp to version {version_id}')
             return True  # Exit app
         except OSError:
             report_unable('delete the old version')
 
-    # Zip unix package
     elif isinstance(globals().get('__loader__'), zipimporter):
         try:
             url = get_bin_info('zip', '3').get('browser_download_url')
@@ -223,7 +228,9 @@ def run_update(ydl):
         except (IOError, OSError):
             return report_unable('overwrite current version')
 
-    ydl.to_screen('Updated yt-dlp to version %s; Restart yt-dlp to use the new version' % version_id)
+    ydl.to_screen(
+        f'Updated yt-dlp to version {version_id}; Restart yt-dlp to use the new version'
+    )
 
 
 '''  # UNUSED
@@ -253,17 +260,19 @@ def update_self(to_screen, verbose, opener):
         'WARNING: "yt_dlp.update.update_self" is deprecated and may be removed in a future version. '
         'Use "yt_dlp.update.run_update(ydl)" instead')
 
-    class FakeYDL():
+
+
+    class FakeYDL:
         _opener = opener
         to_screen = printfn
 
         @staticmethod
         def report_warning(msg, *args, **kwargs):
-            return printfn('WARNING: %s' % msg, *args, **kwargs)
+            return printfn(f'WARNING: {msg}', *args, **kwargs)
 
         @staticmethod
         def report_error(msg, tb=None):
-            printfn('ERROR: %s' % msg)
+            printfn(f'ERROR: {msg}')
             if not verbose:
                 return
             if tb is None:
@@ -278,5 +287,6 @@ def update_self(to_screen, verbose, opener):
                     tb = ''.join(tb_data)
             if tb:
                 printfn(tb)
+
 
     return run_update(FakeYDL())

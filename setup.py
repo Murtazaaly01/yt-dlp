@@ -68,7 +68,10 @@ else:
         resfiles = []
         for fn in files:
             if not os.path.exists(fn):
-                warnings.warn('Skipping file %s since it is not present. Try running `make pypi-files` first' % fn)
+                warnings.warn(
+                    f'Skipping file {fn} since it is not present. Try running `make pypi-files` first'
+                )
+
             else:
                 resfiles.append(fn)
         data_files.append((dirname, resfiles))

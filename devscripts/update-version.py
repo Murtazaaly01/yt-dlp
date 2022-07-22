@@ -21,13 +21,10 @@ rev = str(int(old_rev or 0) + 1) if old_ver == ver else ''
 VERSION = '.'.join((ver, rev)) if rev else ver
 # VERSION_LIST = [(int(v) for v in ver.split(".") + [rev or 0])]
 
-print('::set-output name=ytdlp_version::' + VERSION)
+print(f'::set-output name=ytdlp_version::{VERSION}')
 
-file_version_py = open('yt_dlp/version.py', 'rt')
-data = file_version_py.read()
-data = data.replace(old_version, VERSION)
-file_version_py.close()
-
-file_version_py = open('yt_dlp/version.py', 'wt')
-file_version_py.write(data)
-file_version_py.close()
+with open('yt_dlp/version.py', 'rt') as file_version_py:
+    data = file_version_py.read()
+    data = data.replace(old_version, VERSION)
+with open('yt_dlp/version.py', 'wt') as file_version_py:
+    file_version_py.write(data)

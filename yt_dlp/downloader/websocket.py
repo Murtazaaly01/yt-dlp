@@ -23,7 +23,7 @@ class FFmpegSinkFD(FileDownloader):
         async def call_conn(proc, stdin):
             try:
                 await self.real_connection(stdin, info_dict)
-            except (BrokenPipeError, OSError):
+            except OSError:
                 pass
             finally:
                 try:

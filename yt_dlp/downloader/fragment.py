@@ -84,7 +84,11 @@ class FragmentFD(FileDownloader):
         self._start_frag_download(ctx, info_dict)
 
     def __do_ytdl_file(self, ctx):
-        return not ctx['live'] and not ctx['tmpfilename'] == '-' and not self.params.get('_no_ytdl_file')
+        return (
+            not ctx['live']
+            and ctx['tmpfilename'] != '-'
+            and not self.params.get('_no_ytdl_file')
+        )
 
     def _read_ytdl_file(self, ctx):
         assert 'ytdl_corrupt' not in ctx
@@ -154,13 +158,11 @@ class FragmentFD(FileDownloader):
             ctx['live'] = False
         if not ctx['live']:
             total_frags_str = '%d' % ctx['total_frags']
-            ad_frags = ctx.get('ad_frags', 0)
-            if ad_frags:
+            if ad_frags := ctx.get('ad_frags', 0):
                 total_frags_str += ' (not including %d ad)' % ad_frags
         else:
             total_frags_str = 'unknown (live)'
-        self.to_screen(
-            '[%s] Total fragments: %s' % (self.FD_NAME, total_frags_str))
+        self.to_screen(f'[{self.FD_NAME}] Total fragments: {total_frags_str}')
         self.report_destination(ctx['filename'])
         dl = HttpQuietDownloader(
             self.ydl,
@@ -198,8 +200,7 @@ class FragmentFD(FileDownloader):
                     message = (
                         '.ytdl file is corrupt' if is_corrupt else
                         'Inconsistent state of incomplete fragment download')
-                    self.report_warning(
-                        '%s. Restarting from the beginning ...' % message)
+                    self.report_warning(f'{message}. Restarting from the beginning ...')
                     ctx['fragment_index'] = resume_len = 0
                     if 'ytdl_corrupt' in ctx:
                         del ctx['ytdl_corrupt']
@@ -296,8 +297,7 @@ class FragmentFD(FileDownloader):
         else:
             self.try_rename(ctx['tmpfilename'], ctx['filename'])
             if self.params.get('updatetime', True):
-                filetime = ctx.get('fragment_filetime')
-                if filetime:
+                if filetime := ctx.get('fragment_filetime'):
                     try:
                         os.utime(ctx['filename'], (time.time(), filetime))
                     except Exception:
@@ -320,13 +320,11 @@ class FragmentFD(FileDownloader):
             ctx['live'] = False
         if not ctx['live']:
             total_frags_str = '%d' % ctx['total_frags']
-            ad_frags = ctx.get('ad_frags', 0)
-            if ad_frags:
+            if ad_frags := ctx.get('ad_frags', 0):
                 total_frags_str += ' (not including %d ad)' % ad_frags
         else:
             total_frags_str = 'unknown (live)'
-        self.to_screen(
-            '[%s] Total fragments: %s' % (self.FD_NAME, total_frags_str))
+        self.to_screen(f'[{self.FD_NAME}] Total fragments: {total_frags_str}')
 
         tmpfilename = self.temp_name(ctx['filename'])
 
@@ -437,7 +435,7 @@ class FragmentFD(FileDownloader):
                 if not fatal:
                     return False, frag_index
                 ctx['dest_stream'].close()
-                self.report_error('Giving up after %s fragment retries' % fragment_retries)
+                self.report_error(f'Giving up after {fragment_retries} fragment retries')
                 return False, frag_index
             return frag_content, frag_index
 
@@ -448,8 +446,7 @@ class FragmentFD(FileDownloader):
                     return True
                 else:
                     ctx['dest_stream'].close()
-                    self.report_error(
-                        'fragment %s not found, unable to continue' % frag_index)
+                    self.report_error(f'fragment {frag_index} not found, unable to continue')
                     return False
             self._append_fragment(ctx, pack_func(frag_content, frag_index))
             return True

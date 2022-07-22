@@ -60,8 +60,7 @@ def build_lazy_ie(ie, name):
         name=name,
         bases=', '.join(map(get_base_name, ie.__bases__)),
         module=ie.__module__)
-    valid_url = getattr(ie, '_VALID_URL', None)
-    if valid_url:
+    if valid_url := getattr(ie, '_VALID_URL', None):
         s += f'    _VALID_URL = {valid_url!r}\n'
     if not ie._WORKING:
         s += '    _WORKING = False\n'
@@ -79,7 +78,7 @@ classes = _ALL_CLASSES[:-1]
 ordered_cls = []
 while classes:
     for c in classes[:]:
-        bases = set(c.__bases__) - set((object, InfoExtractor, SearchInfoExtractor))
+        bases = set(c.__bases__) - {object, InfoExtractor, SearchInfoExtractor}
         stop = False
         for b in bases:
             if b not in classes and b not in ordered_cls:
